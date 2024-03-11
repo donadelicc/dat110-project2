@@ -113,7 +113,8 @@ public class Dispatcher extends Stopable {
 		// TODO: create the topic in the broker storage
 		// the topic is contained in the create topic message
 
-		throw new UnsupportedOperationException(TODO.method());
+		storage.createTopic(msg.getTopic());
+		
 
 	}
 
@@ -124,7 +125,7 @@ public class Dispatcher extends Stopable {
 		// TODO: delete the topic from the broker storage
 		// the topic is contained in the delete topic message
 		
-		throw new UnsupportedOperationException(TODO.method());
+		storage.deleteTopic(msg.getTopic());
 	}
 
 	public void onSubscribe(SubscribeMsg msg) {
@@ -134,7 +135,7 @@ public class Dispatcher extends Stopable {
 		// TODO: subscribe user to the topic
 		// user and topic is contained in the subscribe message
 		
-		throw new UnsupportedOperationException(TODO.method());
+		storage.addSubscriber(msg.getUser(), msg.getTopic());
 
 	}
 
@@ -145,18 +146,31 @@ public class Dispatcher extends Stopable {
 		// TODO: unsubscribe user to the topic
 		// user and topic is contained in the unsubscribe message
 		
-		throw new UnsupportedOperationException(TODO.method());
+		storage.removeSubscriber(msg.getUser(), msg.getTopic());
 	}
 
 	public void onPublish(PublishMsg msg) {
 
 		Logger.log("onPublish:" + msg.toString());
-
-		// TODO: publish the message to clients subscribed to the topic
-		// topic and message is contained in the subscribe message
-		// messages must be sent using the corresponding client session objects
-		
-		throw new UnsupportedOperationException(TODO.method());
-
+	
+		// Henter abonnentene for det gitte emnet
+		Set<String> subscribers = storage.getSubscribers(msg.getTopic());
+	
+		// Sjekker om det finnes noen abonnenter før vi forsøker å sende meldingen
+		if (subscribers != null) {
+			for (String user : subscribers) {
+				ClientSession session = storage.getSession(user);
+				if (session != null) {
+					session.send(msg);
+				} else {
+					// Logg eller håndter tilfeller der en abonnent ikke har en gyldig sesjon
+					Logger.log("Ingen gyldig sesjon for bruker: " + user);
+				}
+			}
+		} else {
+			// Logg eller håndter tilfeller der det ikke finnes abonnenter for emnet
+			Logger.log("Ingen abonnenter funnet for emnet: " + msg.getTopic());
+		}
 	}
+	
 }
