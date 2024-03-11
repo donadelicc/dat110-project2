@@ -5,7 +5,7 @@ import no.hvl.dat110.common.Logger;
 public class BrokerServer extends Thread {
 
 	private static int BROKER_DEFAULTPORT = 8080;
-	
+	//
 	public static void main(String[] args) {
 		
 		int port = BROKER_DEFAULTPORT;
